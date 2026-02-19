@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm create:*)",
+      "Bash(/Users/huwenjie/Developer/projects/organizor/src/vite-env.d.ts:*)",
+      "Bash(/Users/huwenjie/Developer/projects/organizor/src/main.tsx:*)",
+      "Bash(/Users/huwenjie/Developer/projects/organizor/src/styles/global.css:*)",
+      "Bash(python3:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm approve-builds:*)",
+      "Bash(/Users/huwenjie/Developer/projects/organizor/src/components/notebook/EditorToolbar.tsx:*)",
+      "Bash(/Users/huwenjie/Developer/projects/organizor/src/components/notebook/RawSparkViewer.tsx:*)",
+      "Bash(/Users/huwenjie/Developer/projects/organizor/src/components/ai/ChatMessage.tsx:*)",
+      "Bash(\"/Users/huwenjie/Developer/projects/organizor/src/components/ai/ChatHistory.tsx\":*)",
+      "Bash(\"/Users/huwenjie/Developer/projects/organizor/src/components/ai/AIChatPanel.tsx\":*)",
+      "Bash(\"/Users/huwenjie/Developer/projects/organizor/src/components/ai/EnhanceDiff.tsx\":*)",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(supabase:*)",
+      "Bash(curl:*)"
+    ]
+  }
+}
