@@ -6,9 +6,13 @@ import type { Conversation, ConversationId, Message } from "@/types/conversation
 import type { NotebookId } from "@/types/notebook"
 
 export async function getOrCreateConversation(notebookId: NotebookId): Promise<Conversation> {
+  // Use nested select to fetch messages in the same query
   const existing = await supabase
     .from("conversations")
-    .select()
+    .select(`
+      *,
+      messages (*)
+    `)
     .eq("notebook_id", notebookId)
     .order("updated_at", { ascending: false })
     .limit(1)
@@ -16,7 +20,11 @@ export async function getOrCreateConversation(notebookId: NotebookId): Promise<C
 
   if (existing.data) {
     const conversationRow = ConversationRowSchema.parse(existing.data)
-    const messages = await fetchMessages(conversationRow.id)
+    const messages = (existing.data.messages ?? []).map((msgRow: unknown) =>
+      transformMessageRow(MessageRowSchema.parse(msgRow)),
+    )
+    // Sort messages by created_at ascending
+    messages.sort((a: Message, b: Message) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
     return transformConversationRow(conversationRow, messages)
   }
 
@@ -43,35 +51,29 @@ export async function createConversation(notebookId: NotebookId): Promise<Conver
 }
 
 export async function getConversations(notebookId: NotebookId): Promise<Conversation[]> {
+  // Use Supabase nested select to fetch conversations with messages in a single query
   const { data, error } = await supabase
     .from("conversations")
-    .select()
+    .select(`
+      *,
+      messages (*)
+    `)
     .eq("notebook_id", notebookId)
     .order("updated_at", { ascending: false })
 
   if (error) throw error
 
-  const conversations = await Promise.all(
-    data.map(async (row) => {
-      const conversationRow = ConversationRowSchema.parse(row)
-      const messages = await fetchMessages(conversationRow.id)
-      return transformConversationRow(conversationRow, messages)
-    }),
-  )
-
-  return conversations
+  return data.map((row) => {
+    const conversationRow = ConversationRowSchema.parse(row)
+    const messages = (row.messages ?? []).map((msgRow: unknown) =>
+      transformMessageRow(MessageRowSchema.parse(msgRow)),
+    )
+    // Sort messages by created_at ascending (Supabase may not preserve order)
+    messages.sort((a: Message, b: Message) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    return transformConversationRow(conversationRow, messages)
+  })
 }
 
-async function fetchMessages(conversationId: ConversationId): Promise<Message[]> {
-  const { data, error } = await supabase
-    .from("messages")
-    .select()
-    .eq("conversation_id", conversationId)
-    .order("created_at", { ascending: true })
-
-  if (error) throw error
-  return data.map((row) => transformMessageRow(MessageRowSchema.parse(row)))
-}
 
 type SendMessageContext = {
   notebookName: string
